@@ -34,6 +34,26 @@ class Achievement {
     icon: json['icon'],
     requirementValue: json['requirementValue'],
     isUnlocked: json['isUnlocked'],
-    progress: json['progress'],
+    progress: (json['progress'] is int) ? (json['progress'] as int).toDouble() : (json['progress'] as num).toDouble(),
   );
+
+  Achievement copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? icon,
+    int? requirementValue,
+    bool? isUnlocked,
+    double? progress,
+  }) {
+    return Achievement(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      icon: icon ?? this.icon,
+      requirementValue: requirementValue ?? this.requirementValue,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+      progress: progress ?? this.progress,
+    );
+  }
 }

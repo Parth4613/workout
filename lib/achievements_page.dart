@@ -81,7 +81,7 @@ class AchievementsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       LinearProgressIndicator(
-                        value: achievement.progress,
+                        value: achievement.progress / achievement.requirementValue,
                         backgroundColor: Colors.grey[200],
                         valueColor: AlwaysStoppedAnimation(
                           achievement.isUnlocked ? Colors.green : Colors.blue,
@@ -89,7 +89,7 @@ class AchievementsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '${(achievement.progress * 100).toInt()}%',
+                        '${((achievement.progress / achievement.requirementValue) * 100).toInt()}%',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,

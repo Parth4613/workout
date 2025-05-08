@@ -9,6 +9,7 @@ import 'progress_page.dart';
 import 'upgrade_page.dart';
 import 'providers/avatar_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/achievement.dart';
 import 'models/workout.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,6 +38,8 @@ class _HomePageState extends State<HomePage> {
     // Refresh user data when the page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<UserProvider>(context, listen: false).refreshUser();
+      // Check achievements when loading the home page
+      Provider.of<AchievementProvider>(context, listen: false).checkAchievements();
     });
     
     _fetchWorkoutStats();
@@ -68,11 +71,15 @@ class _HomePageState extends State<HomePage> {
     _workoutHistorySubscription?.cancel();
     
     _workoutHistorySubscription = FirebaseDatabase.instance
-        .ref('weeklyStats/$userId')
+        .ref('workoutHistory/$userId')
         .onValue
-        .listen((event) {
+        .listen((event) async {
       if (event.snapshot.exists && mounted) {
         _fetchWorkoutStats();
+        // Check achievements whenever workout history updates
+        if (mounted) {
+          await Provider.of<AchievementProvider>(context, listen: false).checkAchievements();
+        }
       }
     });
   }
@@ -83,21 +90,12 @@ class _HomePageState extends State<HomePage> {
 
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekKey = '${weekStart.year}-${weekStart.month}-${weekStart.day}';
     
-    // Check if stats exist for current week, if not initialize them
-    final weeklyStatsRef = FirebaseDatabase.instance.ref('weeklyStats/$userId/$weekKey');
-    final snapshot = await weeklyStatsRef.get();
+    // Get workout history for current week
+    final workoutHistoryRef = FirebaseDatabase.instance.ref('workoutHistory/$userId');
+    final snapshot = await workoutHistoryRef.get();
 
     if (!snapshot.exists) {
-      // Initialize empty stats for new week
-      await weeklyStatsRef.set({
-        'totalCalories': 0,
-        'totalWorkouts': 0,
-        'totalDuration': 0,
-        'weekStart': weekStart.toIso8601String(),
-      });
-      
       setState(() {
         _workoutStats = {
           'totalCalories': 0,
@@ -105,16 +103,50 @@ class _HomePageState extends State<HomePage> {
           'totalDuration': 0,
         };
       });
-    } else {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        _workoutStats = {
-          'totalCalories': data['totalCalories'] ?? 0,
-          'totalWorkouts': data['totalWorkouts'] ?? 0,
-          'totalDuration': data['totalDuration'] ?? 0,
-        };
-      });
+      return;
     }
+
+    final workouts = Map<String, dynamic>.from(snapshot.value as Map);
+    
+    // Calculate weekly stats
+    int totalCalories = 0;
+    int totalWorkouts = 0;
+    int totalDuration = 0;
+
+    workouts.forEach((key, value) {
+      try {
+        final workout = Map<String, dynamic>.from(value as Map);
+        if (!workout.containsKey('completedAt')) return;
+        
+        final completedAt = DateTime.parse(workout['completedAt'] as String);
+        
+        // Only count workouts from current week
+        if (completedAt.isAfter(weekStart) || completedAt.isAtSameMomentAs(weekStart)) {
+          // Handle potentially null or invalid values
+          final calories = workout['calories'];
+          if (calories != null) {
+            totalCalories += (calories as num).toInt();
+          }
+          
+          final duration = workout['duration'];
+          if (duration != null) {
+            totalDuration += (duration as num).toInt();
+          }
+          
+          totalWorkouts++;
+        }
+      } catch (e) {
+        debugPrint('Error processing workout: $e');
+      }
+    });
+
+    setState(() {
+      _workoutStats = {
+        'totalCalories': totalCalories,
+        'totalWorkouts': totalWorkouts,
+        'totalDuration': totalDuration,
+      };
+    });
   }
 
   List<Widget> _getWidgetOptions() {

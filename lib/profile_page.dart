@@ -19,8 +19,16 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     context.read<AvatarProvider>().initializeAvatar();
-    // Refresh user data when profile page loads
     context.read<UserProvider>().refreshUser();
+    // Load achievements when profile page opens
+    context.read<AchievementProvider>().loadAchievements();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload achievements when page comes into focus
+    context.read<AchievementProvider>().loadAchievements();
   }
 
   Future<void> _navigateToSettings() async {
