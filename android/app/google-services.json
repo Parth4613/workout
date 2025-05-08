@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "736501587460",
+    "firebase_url": "https://worky-9c29e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "worky-9c29e",
+    "storage_bucket": "worky-9c29e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736501587460:android:71e0ee5903eb8d7b9fdf51",
+        "android_client_info": {
+          "package_name": "com.example.workout"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBISUpI778esxAl_92OBhMU4k0MLNvSl8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
